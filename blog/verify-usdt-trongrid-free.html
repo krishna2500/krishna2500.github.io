@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verify USDT payments automatically with TronGrid (free, no API key)</title>
+<meta name="description" content="Tutorial: watch USDT TRC-20 transfers on-chain with TronGrid's free endpoint, match them to your orders, and mark invoices paid — no payment gateway, no API key.">
+<link rel="canonical" href="https://krishna2500.github.io/blog/verify-usdt-trongrid-free.html">
+<style>
+:root{color-scheme:dark}body{font-family:system-ui;background:#0b0f14;color:#d7f5e9;margin:0}
+main{max-width:720px;margin:0 auto;padding:48px 20px;line-height:1.7}
+a{color:#4ade80}code,pre{background:#132029;padding:2px 6px;border-radius:6px}
+pre{padding:14px 16px;overflow-x:auto;line-height:1.5}
+.card{border:1px solid #1e3a2f;border-radius:14px;padding:16px 20px;background:#0e151c}
+table{width:100%;border-collapse:collapse;margin:18px 0}
+th,td{border:1px solid #1e3a2f;padding:9px 12px;text-align:left;font-size:.95em}
+th{background:#0e151c}
+h1{font-size:1.7rem}.muted{color:#6b8f7e}
+</style>
+</head>
+<body><main>
+<p class="muted"><a href="/">← home</a></p>
+<h1>Verify USDT payments automatically with TronGrid (free, no API key)</h1>
+<p>If you're accepting USDT directly to your own wallet, you don't need a payment gateway at all — you need a <i>watcher</i>: something that reads the chain, matches an incoming transfer to an order, and marks it paid. TronGrid's public endpoint does the reading for free.</p>
+
+<h2>1. The endpoint</h2>
+<p>List recent USDT transfers TO your address — no API key, no signup:</p>
+<pre>GET https://api.trongrid.io/v1/accounts/{YOUR_ADDRESS}/transactions/trc20
+    ?only_to=true&amp;limit=50</pre>
+<p>Response items carry <code>transaction_id</code>, <code>value</code> (in 6-decimal base units), <code>block_timestamp</code>, <code>from</code> and a <code>token_info.address</code> you should verify against the official USDT contract:</p>
+<pre>TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</pre>
+
+<h2>2. Matching transfers to orders</h2>
+<pre>const value = Number(tx.value);            // e.g. 5007291
+const amount = (value / 1e6).toFixed(6);   // "5.007291"
+const match = pending.find(o =&gt;
+  o.amount === amount &amp;&amp; o.created &lt;= tx.block_timestamp
+);
+if (match &amp;&amp; !(await seen.get(`seen:${tx.transaction_id}`))) {
+  match.status = "paid";
+  await seen.put(`seen:${tx.transaction_id}`, match.id);
+}</pre>
+<p>Two rules make this safe:</p>
+<table>
+<tr><th>Guard</th><th>Why</th></tr>
+<tr><td>Unique amount per order (<code>price + random(1000..9999)/1e6</code>)</td><td>Two pending $5 orders would otherwise both match "5.000000". The suffix is your order ID, embedded in the amount.</td></tr>
+<tr><td><code>seen:&lt;tx_id&gt;</code> single-use store</td><td>The same transfer must never pay two orders, even if a watcher crashes mid-loop.</td></tr>
+</table>
+
+<h2>3. Run it on a cron</h2>
+<p>Once a minute is plenty for checkout flows — TRON blocks land in ~3s, but buyers tolerate a minute. A Cloudflare Worker with a <code>* * * * *</code> trigger, a KV namespace for orders/seen-tx, and this loop is the entire backend. No server, no database, no fees, and the money never touches a third party.</p>
+
+<div class="card">
+<p>Want the whole thing pre-built? <a href="https://github.com/krishna2500/usdt-paykit">usdt-paykit</a> (open source) ships the watcher, exact-amount invoice logic and Telegram alerts — or grab the full worker source from the <a href="https://earn-or-die-pay.leadrescue.workers.dev/shop">shop</a> ($5 USDT Integration Kit, verified on-chain like everything else).</p>
+<p class="muted">Rate limits: TronGrid's public endpoint throttles bursts — one fetch per cron tick per worker is well inside the free envelope. Related: <a href="/blog/accept-usdt-without-payment-gateway.html">the full no-gateway tutorial</a> · <a href="/blog/trc20-vs-erc20-small-payments.html">TRC-20 vs ERC-20</a></p>
+</div>
+<p class="muted"><a href="/">← home</a></p>
+</main></body></html>
