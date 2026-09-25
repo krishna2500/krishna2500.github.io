@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How to accept USDT without a payment gateway (TRC-20 exact-amount invoices)</title>
+<meta name="description" content="A practical tutorial: accept USDT TRC-20 payments with zero gateway fees using unique fractional amounts and on-chain monitoring.">
+<link rel="canonical" href="https://krishna2500.github.io/blog/accept-usdt-without-payment-gateway.html">
+<style>
+:root{color-scheme:dark}body{font-family:system-ui;background:#0b0f14;color:#d7f5e9;margin:0}
+main{max-width:720px;margin:0 auto;padding:48px 20px;line-height:1.7}
+a{color:#4ade80}code{background:#132029;padding:2px 6px;border-radius:6px;font-size:.95em}
+pre{background:#132029;padding:14px;border-radius:10px;overflow-x:auto}
+.card{border:1px solid #1e3a2f;border-radius:14px;padding:16px 20px;background:#0e151c}
+h1{font-size:1.7rem}h2{margin-top:2rem}.muted{color:#6b8f7e}
+</style>
+</head>
+<body><main>
+<p class="muted"><a href="/">← home</a></p>
+<h1>How to accept USDT without a payment gateway</h1>
+<p>Payment gateways charge 0.5–1%, hold funds, run KYC, and sometimes just refuse your country. But USDT on TRON is a public ledger — anyone can read it. You don't need a middleman to <i>notice</i> a payment. You need a way to <b>identify</b> which order a transfer belongs to, and a way to <b>watch</b> your address.</p>
+
+<h2>Step 1 — the 6-decimal trick</h2>
+<p>USDT (TRC-20) has 6 decimals. If your product costs $5, don't ask for <code>5.000000</code> — generate a unique amount per order, like <code>5.003714</code>. The fractional digits become your order ID. Any incoming transfer now uniquely identifies its order — no per-order wallet generation, no extra gas.</p>
+<pre><code>amount = price + random(1000..9999) / 1_000_000</code></pre>
+<p>Collision chance with a handful of live orders is negligible, and a single-use <code>tx_hash</code> set stops replays.</p>
+
+<h2>Step 2 — watch the chain</h2>
+<p>TRON exposes free endpoints. TronGrid's account-transfers API needs no key at low volumes:</p>
+<pre><code>GET https://api.trongrid.io/v1/accounts/YOUR_ADDRESS/transactions/trc20?only_to=true&amp;limit=50</code></pre>
+<p>Every minute (cron), pull incoming transfers, filter for the USDT contract (<code>TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</code>), and compare <code>value / 1e6</code> against your pending orders. Match + order created before the block timestamp → mark paid.</p>
+
+<h2>Step 3 — edge cases you must handle</h2>
+<ul>
+<li><b>Exact match only.</b> Never round. Underpays stay pending.</li>
+<li><b>Timestamp guard.</b> Only accept transfers after the order was created (old txs can't pay new orders).</li>
+<li><b>One tx = one order.</b> Keep a <code>seen:{tx_hash}</code> record with a long TTL.</li>
+<li><b>Expiry.</b> Kill unpaid orders after 30 minutes so amounts can be reused safely.</li>
+<li><b>Finality.</b> TRON blocks are ~3s; for small amounts a couple of confirmations is plenty.</li>
+</ul>
+
+<h2>What this gives you</h2>
+<ul>
+<li>0% platform fee — you pay zero to nobody (network cost is on the sender for TRC-20 transfers)</li>
+<li>Funds land directly in your own wallet — non-custodial by construction</li>
+<li>No KYC, no country restrictions, no account to freeze</li>
+</ul>
+<p>The trade-off: you own the reliability. The watcher must actually run — a dead cron means delayed confirmations. Put it on something with a schedule (Cloudflare Workers cron is free) and alert yourself on payment.</p>
+
+<div class="card">
+<p><b>Or skip the build:</b> we run exactly this as <a href="https://earn-or-die-pay.leadrescue.workers.dev/shop">CryptoPay API</a> — $3 for 100 invoice credits, key issued automatically on payment.</p>
+</div>
+<p class="muted"><a href="/">← home</a></p>
+</main></body></html>

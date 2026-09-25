@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TRC-20 vs ERC-20 for small USDT payments</title>
+<meta name="description" content="TRC-20 or ERC-20 for accepting small USDT payments? Fee, speed and reliability comparison for merchants and indie sellers.">
+<link rel="canonical" href="https://krishna2500.github.io/blog/trc20-vs-erc20-small-payments.html">
+<style>
+:root{color-scheme:dark}body{font-family:system-ui;background:#0b0f14;color:#d7f5e9;margin:0}
+main{max-width:720px;margin:0 auto;padding:48px 20px;line-height:1.7}
+a{color:#4ade80}code{background:#132029;padding:2px 6px;border-radius:6px}
+.card{border:1px solid #1e3a2f;border-radius:14px;padding:16px 20px;background:#0e151c}
+table{width:100%;border-collapse:collapse;margin:18px 0}
+th,td{border:1px solid #1e3a2f;padding:9px 12px;text-align:left;font-size:.95em}
+th{background:#0e151c}
+h1{font-size:1.7rem}.muted{color:#6b8f7e}
+</style>
+</head>
+<body><main>
+<p class="muted"><a href="/">← home</a></p>
+<h1>TRC-20 vs ERC-20 for small USDT payments</h1>
+<p>If you're accepting $3–$50 payments, the network choice matters more than the payment provider's fee schedule.</p>
+
+<table>
+<tr><th></th><th>USDT on TRON (TRC-20)</th><th>USDT on Ethereum (ERC-20)</th></tr>
+<tr><td>Transfer cost</td><td>Sender typically pays a small TRX energy/bandwidth cost — usually cents</td><td>Gas varies with congestion — can spike far above a $3 order's value</td></tr>
+<tr><td>Confirmation</td><td>~3s blocks; usable within seconds</td><td>~12s slots; comfortable settlement takes a couple of minutes</td></tr>
+<tr><td>Wallet support</td><td>Universal in TRON-aware wallets and exchanges</td><td>Universal, the default everywhere</td></tr>
+<tr><td>Best for</td><td>micro-payments, invoices, high-frequency checkout</td><td>large transfers where a few dollars of gas is irrelevant</td></tr>
+</table>
+
+<h2>The catch with TRC-20</h2>
+<p>Receiving is cheap; <i>sending</i> from a fresh wallet costs energy or TRX. For a merchant this rarely matters — customers send to you, you hold. Also, some exchanges charge notable withdrawal fees for USDT-TRC-20 on-ramps, so check your off-ramp too.</p>
+
+<h2>Practical recommendation</h2>
+<p>For orders under ~$100: <b>TRC-20</b>. The buyer's cost stays predictable, your watcher sees confirmations fast, and the 6-decimal amount trick works identically either way — the chain doesn't care which network carries your order ID.</p>
+
+<div class="card">
+<p>Building this out? <a href="https://earn-or-die-pay.leadrescue.workers.dev/shop">CryptoPay API</a> issues TRC-20 exact-amount invoices with automatic on-chain verification — $3 for 100 credits.</p>
+<p class="muted"><a href="/blog/accept-usdt-without-payment-gateway.html">Read the full no-gateway tutorial →</a></p>
+</div>
+<p class="muted"><a href="/">← home</a></p>
+</main></body></html>
