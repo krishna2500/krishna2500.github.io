@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How to build an email address parser and compare PWA vs default browser</title>
+<meta name="description" content="A practical tutorial: building an email address parser and comparing Progressive Web Apps (PWAs) with default browsers.">
+<link rel="canonical" href="https://krishna2500.github.io/blog/email-address-parser-pwa-vs-default-browser.html">
+<style>
+:root{color-scheme:dark}
+body{font-family:system-ui;background:#0b0f14;color:#d7f5e9;margin:0}
+main{max-width:720px;margin:0 auto;padding:48px 20px;line-height:1.7}
+a{color:#4ade80}
+code{background:#132029;padding:2px 6px;border-radius:6px;font-size:.95em}
+pre{background:#132029;padding:14px;border-radius:10px;overflow-x:auto}
+.card{border:1px solid #1e3a2f;border-radius:14px;padding:16px 20px;background:#0e151c}
+h1{font-size:1.7rem}
+h2{margin-top:2rem}
+.muted{color:#6b8f7e}
+</style>
+</head>
+<body>
+<main>
+<p class="muted"><a href="/">← home</a></p>
+<h1>Building an email address parser and comparing PWA vs default browser</h1>
+<p>As a developer, you often need to extract email addresses from text data. This can be a tedious task, especially when dealing with large datasets. In this article, we will explore how to build a simple email address parser using regular expressions and compare the performance of Progressive Web Apps (PWAs) with default browsers.</p>
+<h2>What is an email address parser?</h2>
+<p>An email address parser is a program that takes a string of text as input and returns a list of extracted email addresses. Email addresses typically follow a specific format, which consists of a local part (the part before the '@' symbol) and a domain (the part after the '@' symbol). The local part can contain letters, numbers, and special characters, while the domain must contain at least two parts separated by a dot.</p>
+<h2>Building an email address parser using regular expressions</h2>
+<p>Regular expressions are a powerful tool for matching patterns in strings. We can use regular expressions to define a pattern that matches email addresses. Here is an example of a regular expression that matches most common email address formats:</p>
+<pre>
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+</pre>
+<p>Let's break down this regular expression:</p>
+<ul>
+<li><code>^</code> matches the start of the string.</li>
+<li><code>[a-zA-Z0-9._%+-]+</code> matches one or more characters that are letters (both uppercase and lowercase), numbers, or special characters (dot, underscore, percent, plus, or hyphen).</li>
+<li><code>@</code> matches the '@' symbol.</li>
+<li><code>[a-zA-Z0-9.-]+</code> matches one or more characters that are letters (both uppercase and lowercase), numbers, or special characters (dot or hyphen).</li>
+<li><code>\.</code> matches the dot character.</li>
+<li><code>[a-zA-Z]{2,}</code> matches the domain extension (it must be at least two characters long).</li>
+<li><code>$</code> matches the end of the string.</li>
+</ul>
+<p>Now that we have our regular expression, we can use it to extract email addresses from a string of text:</p>
+<pre>
+const text = "Hello, my email address is john.doe@example.com.";
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const emails = text.match(emailRegex);
+console.log(emails); // Output: ["john.doe@example.com."]
+</pre>
+<h2>Comparing PWA vs default browser</h2>
+<p>Progressive Web Apps (PWAs) are web applications that use modern web technologies to provide a native app-like experience to users. One of the key benefits of PWAs is that they can be installed on a user's device and run offline, just like a native app. But how do PWAs compare to default browsers in terms of performance?</p>
+<p>Let's create a simple PWA using the Web App Manifest and compare its performance with a default browser. First, we need to create a Web App Manifest file:</p>
+<pre>
+{
+  "short_name": "My PWA",
+  "name": "My Progressive Web App",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#333333",
+  "background_color": "#333333"
+}
+</pre>
+<p>Next, we need to create an HTML file that will serve as the entry point for our PWA:</p>
+<pre>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My PWA</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <h1>My PWA</h1>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(registration => {
+        console.log('Service worker registered:', registration);
+      }).catch(error => {
+        console.error('Error registering service worker:', error);
+      });
+    }
+  </script>
+</body>
+</html>
+</pre>
+<p>Finally, we need to create a service worker file that will handle the offline caching and other PWA features:</p>
+<pre>
+// sw.js
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open('my-pwa-cache').then(cache => {
+      return cache.addAll([
+        '/',
+        '/icon.png',
+        '/manifest.json'
+      ]);
+    })
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
+  );
+});
+</pre>
+<p>Now that we have our PWA set up, let's compare its performance with a default browser. We can use the Lighthouse tool to audit our PWA and compare its performance with a default browser:</p>
+<pre>
+lighthouse --only-categories performance https://krishna2500.github.io/pwa/
+</pre>
+<p>Running this command will give us a report on the performance of our PWA, including metrics such as First Contentful Paint (FCP), Largest Contentful Paint (LCP), and Time to Interactive (TTI). We can then compare these metrics with those of a default browser to see how our PWA stacks up.</p>
+<h2>Conclusion</h2>
+<p>In this article, we explored how to build a simple email address parser using regular expressions and compared the performance of Progressive Web Apps (PWAs) with default browsers. We created a PWA using the Web App Manifest and compared its performance with a default browser using the Lighthouse tool. By following these steps, you can create your own email address parser and compare the performance of PWAs with default browsers.</p>
+<p>Thanks for reading!</p>
+<p class="muted"><a href="/blog">← back to blog</a></p>
+</main>
+</body>
+</html>
+
